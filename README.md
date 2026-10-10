@@ -57,39 +57,3 @@ erDiagram
 The procedures never `COMMIT` internally; the caller controls the transaction, so a failure rolls back the whole allocation (atomicity).
 
 **Network-wide visibility** - `v_hospital_stock`, `v_open_demand`, `v_shortage_surplus` (SHORTAGE / OK / SURPLUS against per-hospital min/max levels), `v_network_summary`, `v_expiring_soon`, `v_wastage_report`, `v_request_fulfilment`. All use `expiry_date > SYSDATE` so they stay correct between sweeps. The index `ix_unit_fefo (hospital_id, status, expiry_date)` serves the FEFO scan; `EXPLAIN PLAN` at the end of `06_tests.sql` demonstrates it.
-
-## Evaluation (what to report)
-
-| Claim | Evidence |
-|-------|----------|
-| FEFO reduces wastage | T7: identical data, 70 requests, FIFO vs FEFO; count of units about to expire unused (FEFO should be lower) |
-| Shortage solved by network | T5 plus `v_shortage_surplus` before/after |
-| No double issue under concurrency | T6 (deterministic) and `07_concurrency_test.py` (25 real sessions) |
-| Integrity | T3 (expired / illegal transition / incompatible allocation all rejected) |
-| Expiry automation | T4 (sweep), T3a (trigger) |
-| Faster fulfilment | `v_request_fulfilment.minutes_to_fulfil`: automated allocation resolves in seconds; compare with a manual phone-around process in your discussion |
-
-Paste the PASS/FAIL output, the T7 numbers and the dashboard result sets into your report as screenshots.
-
-## Suggested report outline
-
-1. Problem statement and motivation (wastage next to shortage)
-2. Requirements and assumptions (42-day shelf life, 7-day near-expiry window, 90-day donation gap, red-cell compatibility only)
-3. ER diagram and relational schema
-4. Normalisation walkthrough (1NF -> 3NF, the `group_id` decision)
-5. Implementation: triggers, procedures, scheduler, views, indexes
-6. Concurrency design (lock strategy diagram: scan -> try lock -> re-check -> issue)
-7. Test scenarios and results
-8. Limitations and future work
-
-## Likely viva questions
-
-* *Why SKIP LOCKED instead of plain FOR UPDATE?* Plain FOR UPDATE makes the second session wait for the first to commit, then it may find the unit already gone; SKIP LOCKED lets it take the next-best unit immediately, which matters when a patient is waiting.
-* *Why not store blood group on `blood_unit`?* Transitive dependency (3NF); it also prevents a unit and its donor from ever disagreeing.
-* *Why both a trigger and a scheduled job?* The trigger fires only on DML; the job handles rows nobody touches while time passes.
-* *What isolation level?* Oracle's default READ COMMITTED; correctness comes from explicit row locks plus the UNIQUE constraint, not from SERIALIZABLE.
-* *Why doesn't the procedure commit?* So the caller can combine allocation with other work atomically.
-
-## Extensions if you have time
-
-Distance-aware transfer choice (add lat/long to `hospital`), platelets and plasma with their own shelf lives and compatibility rules, a reserve stock for CRITICAL requests, a materialised view for dashboards on very large data, a small web front end over the views.
