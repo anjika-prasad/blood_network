@@ -1,0 +1,44 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Blood Network Console</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <aside class="side">
+    <div class="brand">
+      <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2.5c3.2 4.2 6.5 7.9 6.5 11.9a6.5 6.5 0 0 1-13 0c0-4 3.3-7.7 6.5-11.9z"/></svg>
+      <div>
+        <strong>Blood Network</strong>
+        <span>Inventory console</span>
+      </div>
+    </div>
+    <nav id="nav">
+      <a href="#overview">Overview</a>
+      <a href="#inventory">Inventory</a>
+      <a href="#donors">Donors</a>
+      <a href="#requests">Requests</a>
+      <a href="#transfers">Transfers</a>
+      <a href="#activity">Activity</a>
+    </nav>
+    <p class="conn" id="conn">Connecting…</p>
+  </aside>
+
+  <main>
+    <header class="head">
+      <div>
+        <h1 id="title">Overview</h1>
+        <p id="subtitle"></p>
+      </div>
+      <button class="btn ghost" data-act="refresh">Refresh</button>
+    </header>
+    <section id="view" aria-live="polite"></section>
+  </main>
+
+  <dialog id="dlg"></dialog>
+  <div id="toast" role="status" aria-live="polite"></div>
+  <script src="app.js"></script>
+</body>
+</html>

@@ -57,3 +57,15 @@ erDiagram
 The procedures never `COMMIT` internally; the caller controls the transaction, so a failure rolls back the whole allocation (atomicity).
 
 **Network-wide visibility** - `v_hospital_stock`, `v_open_demand`, `v_shortage_surplus` (SHORTAGE / OK / SURPLUS against per-hospital min/max levels), `v_network_summary`, `v_expiring_soon`, `v_wastage_report`, `v_request_fulfilment`. All use `expiry_date > SYSDATE` so they stay correct between sweeps. The index `ix_unit_fefo (hospital_id, status, expiry_date)` serves the FEFO scan; `EXPLAIN PLAN` at the end of `06_tests.sql` demonstrates it.
+
+## Web console (local front end)
+
+`webapp/` is a small browser front end over the procedures and views: dashboards, inventory, donor registration and donations, patient requests with FEFO allocation, transfers, and the expiry sweep. It runs on the machine that hosts the database and listens on `127.0.0.1` only, so it is not reachable from any other computer.
+
+```
+cd webapp
+pip install -r requirements.txt
+python server.py
+```
+
+It asks for the Oracle username and password at start-up (or reads `ORA_USER` / `ORA_PWD` / `ORA_DSN`, default DSN `localhost/XEPDB1`), then opens http://127.0.0.1:5000. Run `01`-`05` first. Note that `06_tests.sql` wipes the units and requests the console shows.
